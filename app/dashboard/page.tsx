@@ -21,9 +21,15 @@ export default function DashboardPage() {
   const [students, setStudents] = useState<StudentData[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<StudentData | null>(null);
   const [github, setGithub] = useState("");
-  const [hasTicked, setHasTicked] = useState(false);
+  const [isMarking, setIsMarking] = useState(false);
+  const [globalTask, setGlobalTask] = useState<{ currentTask: string }>({
+  currentTask: "",
+});
 
-  // ✅ Fetch students live from backend (MongoDB)
+
+
+
+  // ✅ Fetch students from backend
   async function fetchStudents() {
     try {
       const res = await fetch("http://localhost:3001/api/students");
@@ -34,14 +40,27 @@ export default function DashboardPage() {
       console.error("Error fetching students:", error);
     }
   }
+  // ✅ Fetch current task and deadline (from admin)
+async function fetchGlobalTask() {
+  try {
+    const res = await fetch("http://localhost:3001/api/task");
+    const data = await res.json();
+    setGlobalTask(data);
+  } catch (error) {
+    console.error("Error fetching global task:", error);
+  }
+}
 
-  useEffect(() => {
+
+ useEffect(() => {
+  fetchStudents();
+  fetchGlobalTask(); // ✅ also fetch the task
+  const interval = setInterval(() => {
     fetchStudents();
-
-    // Auto-refresh every 10s for live sync with admin panel
-    const interval = setInterval(fetchStudents, 10000);
-    return () => clearInterval(interval);
-  }, []);
+    fetchGlobalTask();
+  }, 10000); // auto-refresh every 10s
+  return () => clearInterval(interval);
+}, []);
 
   // ✅ Logout
   const handleLogout = () => {
@@ -54,7 +73,7 @@ export default function DashboardPage() {
     student.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  // ✅ Status color
+  // ✅ Status color helper
   const getStatusColor = (status: string) => {
     switch (status) {
       case "underReview":
@@ -68,27 +87,41 @@ export default function DashboardPage() {
     }
   };
 
-  // ✅ Mark task as Done (user side)
+  // ✅ Mark task as Done (changes pending → underReview)
   const handleMarkDone = async () => {
-    if (!selectedStudent || hasTicked) return;
+    if (!selectedStudent) return;
+    if (selectedStudent.status !== "pending") return; // prevent if already marked
+    if (isMarking) return;
 
-    setHasTicked(true);
-    alert("⚠️ Confirm your project completion before marking done!");
+    const confirmMark = confirm("⚠️ Are you sure you’ve completed your project?");
+    if (!confirmMark) return;
+
+    setIsMarking(true);
 
     try {
-      await axios.patch(`http://localhost:3001/api/students/${selectedStudent._id}`, {
+      console.log("PATCH → Marking student as underReview:", selectedStudent._id);
+      const res = await axios.patch(`http://localhost:3001/api/students/${selectedStudent._id}`, {
         status: "underReview",
       });
-      setStudents((prev) =>
-        prev.map((s) =>
-          s._id === selectedStudent._id ? { ...s, status: "underReview" } : s
-        )
-      );
-      setSelectedStudent((prev) =>
-        prev ? { ...prev, status: "underReview" } : prev
-      );
+
+      if (res.data?.success) {
+        alert("✅ Task marked as 'Under Review' successfully!");
+        setStudents((prev) =>
+          prev.map((s) =>
+            s._id === selectedStudent._id ? { ...s, status: "underReview" } : s
+          )
+        );
+        setSelectedStudent((prev) =>
+          prev ? { ...prev, status: "underReview" } : prev
+        );
+      } else {
+        alert(res.data?.message || "Failed to update status.");
+      }
     } catch (err) {
-      console.error("Error updating status:", err);
+      console.error("❌ Error marking done:", err);
+      alert("Server error while marking task as done.");
+    } finally {
+      setIsMarking(false);
     }
   };
 
@@ -97,21 +130,34 @@ export default function DashboardPage() {
     if (!selectedStudent) return;
     if (!github.trim()) return alert("Please enter a valid GitHub ID.");
 
+    // Prevent re-entry if already locked
+    if (selectedStudent.github && selectedStudent.github.trim() !== "") {
+      return alert("GitHub ID already submitted and locked! 🔒");
+    }
+
     try {
-      await axios.patch(`http://localhost:3001/api/students/${selectedStudent._id}`, {
+      console.log("PATCH → Saving GitHub:", selectedStudent._id);
+
+      const res = await axios.patch(`http://localhost:3001/api/students/${selectedStudent._id}`, {
         github: github.trim(),
       });
-      setStudents((prev) =>
-        prev.map((s) =>
-          s._id === selectedStudent._id ? { ...s, github: github.trim() } : s
-        )
-      );
-      setSelectedStudent((prev) =>
-        prev ? { ...prev, github: github.trim() } : prev
-      );
-      alert("✅ GitHub ID saved successfully!");
+
+      if (res.data?.success) {
+        alert("✅ GitHub ID saved and locked successfully!");
+        setStudents((prev) =>
+          prev.map((s) =>
+            s._id === selectedStudent._id ? { ...s, github: github.trim() } : s
+          )
+        );
+        setSelectedStudent((prev) =>
+          prev ? { ...prev, github: github.trim() } : prev
+        );
+      } else {
+        alert(res.data?.message || "Error saving GitHub.");
+      }
     } catch (err) {
-      console.error("Error saving GitHub:", err);
+      console.error("❌ Error saving GitHub:", err);
+      alert("Server error while saving GitHub ID.");
     }
   };
 
@@ -130,11 +176,13 @@ export default function DashboardPage() {
           <h1 className="text-3xl font-bold">CodeMinds Dashboard</h1>
         </div>
 
-        {/* Task Overview */}
         <div className="bg-white shadow-md border border-gray-100 rounded-xl px-6 py-4 w-full md:w-auto">
-          <h3 className="font-semibold text-gray-800 mb-1 text-lg">📋 Current Task:</h3>
-          <p className="text-blue-600 font-medium">JavaScript Project – Interactive Dashboard</p>
-        </div>
+  <h3 className="font-semibold text-gray-800 mb-1 text-lg">📋 Current Task:</h3>
+  <p className="text-blue-600 font-medium">
+    {globalTask.currentTask || "No task assigned yet"}
+  </p>
+</div>
+
 
         <button
           onClick={handleLogout}
@@ -144,7 +192,7 @@ export default function DashboardPage() {
         </button>
       </div>
 
-      {/* Search Bar */}
+      {/* Search */}
       <div className="w-full max-w-3xl mb-6">
         <input
           type="text"
@@ -214,7 +262,7 @@ export default function DashboardPage() {
               <span className="font-semibold">Deadline:</span> {selectedStudent.deadline}
             </p>
 
-            {/* GitHub Section */}
+            {/* GitHub */}
             {!selectedStudent.github ? (
               <div className="flex flex-col sm:flex-row items-center gap-3 mb-6">
                 <input
@@ -242,11 +290,12 @@ export default function DashboardPage() {
                   className="text-blue-600 underline"
                 >
                   {selectedStudent.github}
-                </a>
+                </a>{" "}
+                <span className="text-gray-500 text-sm">(locked 🔒)</span>
               </p>
             )}
 
-            {/* Status Section */}
+            {/* Status */}
             <p className={`font-bold text-lg mb-4 ${getStatusColor(selectedStudent.status)}`}>
               Status:{" "}
               {selectedStudent.status === "underReview"
@@ -259,14 +308,17 @@ export default function DashboardPage() {
             </p>
 
             {/* Mark Done Button */}
-            {!hasTicked && selectedStudent.status === "pending" && (
+            {selectedStudent.status === "pending" && (
               <motion.button
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
+                disabled={isMarking}
                 onClick={handleMarkDone}
-                className="group relative overflow-hidden bg-blue-600 text-white text-base font-bold px-8 py-4 rounded-lg shadow-lg hover:bg-blue-700 transition-all duration-300"
+                className={`group relative overflow-hidden text-white text-base font-bold px-8 py-4 rounded-lg shadow-lg transition-all duration-300 ${
+                  isMarking ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"
+                }`}
               >
-                <span className="relative z-10">Mark as Done ✅</span>
+                {isMarking ? "Submitting..." : "Mark as Done ✅"}
               </motion.button>
             )}
           </motion.div>
