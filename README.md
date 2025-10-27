@@ -1,93 +1,56 @@
-🚀 CodeMinds Student Panel
+# 🚀 CodeMinds Student Panel
 
-The CodeMinds Student Panel is a web platform for students in the CodeMinds core team to manage their project progress.
-Each student can log in, enter their GitHub ID (one-time), view assigned projects, and mark them as completed.
-After marking completion, the project status changes to Under Review, which is later updated by the admin through the CodeMinds Admin Panel.
+The **CodeMinds Student Panel** is a web platform for CodeMinds members to manage their project progress.  
+Each student can log in, enter their **GitHub ID (one-time)**, view assigned projects, and mark them as completed.  
+Once a student marks a project as completed, the system notifies the tech leads (admins) and the status changes to **Under Review**, which is later updated from the **Admin Panel**.
 
-🧩 Features
-🎓 Student Panel
+---
 
-Clean and modern Next.js + Tailwind CSS frontend.
+## 🧩 Features
 
-Login page for each student (with pre-given credentials).
+### 🎓 Student Panel
+- Built using **Next.js + Tailwind CSS**.
+- **Login page** for each student (with pre-created credentials).
+- **One-time GitHub ID input**, saved permanently in the backend.
+- Displays assigned **project details** (title, description, and deadline).
+- **“YES, I have completed”** button to notify the tech leads.
+- After ticking YES:
+  - Button becomes **locked** (cannot be clicked again).
+  - Status changes to **Under Review** automatically.
+- Once reviewed by the admin, status updates to:
+  - ✅ **Reviewed**
+  - 🟡 **Under Review**
+  - ⚫ **Not Reviewed**
 
-One-time GitHub ID input, saved permanently in the backend.
+---
 
-Displays assigned project details (title, description, and deadline).
+## 🧠 Project Flow
 
-“YES, I have completed” button to notify the tech leads.
+### **Student Side**
+1. Student logs in with given credentials.  
+2. Searches or selects their name.  
+3. If GitHub ID not entered → inputs once and saves.  
+4. Views assigned project from backend.  
+5. Clicks “YES” when project completed.  
+6. Status changes to **Under Review**.  
+7. After admin review → sees **Reviewed ✅**.
 
-Button gets locked after clicking, changing status to Under Review.
+### **Admin Side (Separate Project)**
+- Admin uploads or edits student details and tasks.  
+- Reviews projects submitted by students.  
+- Updates status → data syncs automatically to student panel.  
 
-Once reviewed by admin, student sees:
+---
 
-✅ Reviewed
+## 🏗️ Tech Stack
 
-🟡 Under Review
+| Layer | Technology |
+|-------|-------------|
+| Frontend | Next.js (App Router) |
+| Styling | Tailwind CSS |
+| Backend | Node.js + Express.js |
+| Database | MongoDB (Mongoose) |
+| Authentication | Basic login system |
+| Deployment | Vercel (Frontend) + Render/Heroku (Backend) |
 
-⚫ Pending
-
-🧠 Project Flow
-Student Side
-
-Login using given credentials.
-
-Search/select your name.
-
-If GitHub ID not entered → input and save.
-
-View assigned project (fetched from backend).
-
-Tick “YES” after completion → status changes to Under Review.
-
-After admin review → status updates to Reviewed ✅.
-
-Admin Side (Separate Project)
-
-Admin uploads students and assigns tasks.
-
-Reviews project submissions.
-
-Updates project status → synced automatically to Student Panel.
-
-🏗️ Tech Stack
-Layer	Technology
-Frontend	Next.js (App Router)
-Styling	Tailwind CSS
-Backend	Node.js + Express.js
-Database	MongoDB (Mongoose ORM)
-Auth	Basic login (to be integrated)
-Deployment	Vercel (Frontend) + Render/Heroku (Backend)
-📁 Folder Structure
-codeminds-student-panel/
-│
-├── app/
-│   ├── layout.js               # Global layout
-│   ├── page.js                 # Landing / Loading page
-│   ├── login/page.js           # Login page
-│   ├── dashboard/page.js       # Main dashboard
-│
-├── components/
-│   ├── GithubInput.js          # One-time GitHub ID input component
-│   ├── ProjectCard.js          # Project display and status
-│
-├── styles/
-│   └── globals.css             # Tailwind setup
-│
-├── package.json
-└── README.md
-
-⚙️ Setup Instructions
-1. Clone the Repository
-git clone https://github.com/<your-username>/codeminds-student-panel.git
-cd codeminds-student-panel
-
-2. Install Dependencies
-npm install
-
-3. Run the Development Server
-npm run dev
-
-
-Then open http://localhost:3000
- in your browse
+---
