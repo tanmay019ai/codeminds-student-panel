@@ -1,17 +1,23 @@
 import "./globals.css";
 import { Poppins } from "next/font/google";
+import React from "react";
 
 const poppins = Poppins({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata = {
-  title: "CodeMinds Student Panel",
-  description: "Loading your tech community",
+  title: "CodeMinds",
+  description: "CodeMinds Admin Dashboard",
 };
 
-export default function RootLayout({ children }) {
+// ✅ Add the correct type for `children`
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en">
       <body className={poppins.className}>{children}</body>
