@@ -32,7 +32,7 @@ export default function DashboardPage() {
   // ✅ Fetch students from backend
   async function fetchStudents() {
     try {
-      const res = await fetch("http://localhost:3001/api/students");
+      const res = await fetch("https://codeminds-admin.vercel.app/api/students");
       const data = await res.json();
       if (Array.isArray(data)) setStudents(data);
       else console.error("Invalid data:", data);
@@ -43,7 +43,7 @@ export default function DashboardPage() {
   // ✅ Fetch current task and deadline (from admin)
 async function fetchGlobalTask() {
   try {
-    const res = await fetch("http://localhost:3001/api/task");
+    const res = await fetch("https://codeminds-admin.vercel.app/api/task");
     const data = await res.json();
     setGlobalTask(data);
   } catch (error) {
@@ -100,7 +100,7 @@ async function fetchGlobalTask() {
 
     try {
       console.log("PATCH → Marking student as underReview:", selectedStudent._id);
-      const res = await axios.patch(`http://localhost:3001/api/students/${selectedStudent._id}`, {
+      const res = await axios.patch(`https://codeminds-admin.vercel.app/api/students/${selectedStudent._id}`, {
         status: "underReview",
       });
 
@@ -138,7 +138,7 @@ async function fetchGlobalTask() {
     try {
       console.log("PATCH → Saving GitHub:", selectedStudent._id);
 
-      const res = await axios.patch(`http://localhost:3001/api/students/${selectedStudent._id}`, {
+      const res = await axios.patch(`https://codeminds-admin.vercel.app/api/students/${selectedStudent._id}`, {
         github: github.trim(),
       });
 
